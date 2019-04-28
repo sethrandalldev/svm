@@ -1,0 +1,1 @@
+My main resources were the cvxopt.org and the sample code sent to us by e-mail. My initial testing was using the data you had shown on the board during a lab, simplified to use four data points instead of six.

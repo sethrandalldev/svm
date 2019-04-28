@@ -1,0 +1,57 @@
+import numpy as np
+from cvxopt import matrix, solvers
+
+def train(data, targets, k, C=None):
+    len_data = len(data)
+
+    K = np.array([[k(x1, x2) for x2 in data] for x1 in data])
+    # print("K = " + str(K))
+
+    P = matrix(targets * targets.transpose() * K)
+    # print(P)
+
+    q = matrix(-np.ones((len_data,1)))
+    # print(q)
+
+    A = matrix(targets.reshape(1,len_data))
+    # print("A = ", A)
+
+    G = matrix(-np.eye(len_data))
+    # print(G)
+
+    h = matrix(np.zeros((len_data, 1)))
+    # print(h)
+    
+    b = matrix(0.0)
+
+    a = solvers.qp(P, q, G, h, A, b)
+
+    lm = np.array(a['x'])
+    # print(lm)
+
+    threshold = 1e-5
+    
+    sv = np.where(lm > threshold)[0]
+    # print(sv)
+
+    w0 = sum([targets[j][0] - sum([lm[i] * targets[i][0] * k(data[i], data[j]) for i in sv]) for j in sv]) / len(sv)
+    # print(w0)
+        
+    return (lm, targets, data, sv, k, w0)
+
+def classify(svm, inputs):
+    lm = svm[0]
+    targets = svm[1]
+    data = svm[2]
+    sv = svm[3]
+    k = svm[4]
+    w0 = svm[5]
+
+    results = []
+    for input in inputs:
+        results.append(np.sign(sum([lm[i] * targets[i][0] * linear(data[i], input) for i in sv]) + w0))
+    return results
+
+def linear(x1, x2):
+    return 1 + np.dot(x1, x2)
+
